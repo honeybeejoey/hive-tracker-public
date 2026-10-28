@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Hive Tracker</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        /* DeGod / DeHoney palette: warm cream backdrop, near-black
+           charcoal (suit + logo lettering), honeycomb gold, a pale
+           lavender tint for soft surfaces, and ice blue-grey / soft
+           purple only as small accents. */
+        --bg: #fbf3dc;
+        --surface: #fffdf6;
+        --text: #26221e;
+        --dim: #6f6053;
+        --border: #e6d5ab;
+        --accent: #2a2521;
+        --accent-ink: #ffffff;
+        --accent-soft: #e9dff3;
+        --gold: #c08a00;
+        --gold-deep: #96690a;
+        --violet: #6d5a9e;
+        --ice-soft: #e9eff3;
+        --good: #4d7c0f;
+        --warn: #b91c1c;
+        --track-off: #ddd2ea;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #15110d;
+          --surface: #211a13;
+          --text: #f6eedd;
+          --dim: #b8ab93;
+          --border: #473a24;
+          --accent: #e9b949;
+          --accent-ink: #241a05;
+          --accent-soft: #2e2742;
+          --gold: #d9a92f;
+          --gold-deep: #e9b949;
+          --violet: #b3a6dd;
+          --ice-soft: #232e36;
+          --good: #a3e635;
+          --warn: #f87171;
+          --track-off: #3d3350;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.45;
+      }
+      .font-display { font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+      #bee-bg {
+        position: fixed; inset: 0;
+        width: 100%; height: 100%;
+        z-index: 0; pointer-events: none;
+      }
+      main {
+        position: relative; z-index: 1;
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 12px 16px calc(64px + env(safe-area-inset-bottom));
+      }
+      h1 { font-size: 30px; line-height: 1.2; margin: 4px 0 0; font-weight: 700; }
+      h2 { margin: 0; }
+      p { margin: 0; }
+      .kicker {
+        font-size: 13px; font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; color: var(--violet);
+      }
+      .dim { color: var(--dim); }
+      .mt1 { margin-top: 4px; } .mt2 { margin-top: 8px; } .mt3 { margin-top: 12px; }
+      .mt4 { margin-top: 16px; } .mt6 { margin-top: 24px; } .mt8 { margin-top: 32px; }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+      }
+      .card-soft {
+        background: var(--accent-soft);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+      }
+      button.hive-card {
+        display: block; width: 100%; text-align: left; cursor: pointer;
+        font: inherit; color: inherit;
+        border-top: 3px solid var(--gold);
+        box-shadow: 0 1px 2px rgba(0,0,0,.05);
+      }
+      .btn-primary {
+        display: block; width: 100%; min-height: 60px;
+        background: var(--accent); color: var(--accent-ink);
+        border: none; border-radius: 16px;
+        font-size: 18px; font-weight: 700; cursor: pointer;
+        padding: 12px 16px;
+      }
+      .btn-primary.big { min-height: 68px; font-size: 20px; }
+      .btn-primary:disabled { opacity: .5; }
+      .btn-ghost {
+        display: block; width: 100%; min-height: 52px;
+        background: var(--surface); color: var(--gold-deep);
+        border: 1px solid var(--gold); border-radius: 12px;
+        font-size: 16px; font-weight: 600; cursor: pointer;
+        padding: 10px 16px;
+      }
+      .btn-danger-solid {
+        flex: 1; min-height: 52px; background: var(--warn); color: #fff;
+        border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
+      }
+      .btn-cancel {
+        flex: 1; min-height: 52px; background: var(--surface); color: var(--text);
+        border: 1px solid var(--border); border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+      }
+      .link-btn {
+        background: none; border: none; padding: 0; cursor: pointer;
+        min-height: 44px; font-size: 16px; font-weight: 600; color: var(--accent);
+        display: inline-flex; align-items: center;
+      }
+      .danger-link { color: var(--warn); font-size: 16px; font-weight: 600; }
+      .row-flex { display: flex; gap: 12px; }
+      .stack { display: flex; flex-direction: column; gap: 12px; }
+      .stack-lg { display: flex; flex-direction: column; gap: 16px; }
+
+      section.block { margin-top: 32px; }
+      section.block > h2 { font-size: 20px; font-weight: 700; }
+      section.block > .body { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+      label.field { display: block; }
+      label.field > span {
+        display: block; margin-bottom: 6px;
+        font-size: 14px; font-weight: 600;
+      }
+      .input {
+        width: 100%; min-height: 52px;
+        border: 1px solid var(--border); border-radius: 12px;
+        background: var(--surface); color: var(--text);
+        padding: 12px 16px; font-size: 16px; font-family: inherit;
+        outline: none; appearance: none; -webkit-appearance: none;
+      }
+      .input:focus { border-color: var(--gold-deep); }
+      textarea.input { min-height: 84px; resize: vertical; }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 380px) { .grid2 { grid-template-columns: 1fr; } }
+
+      .toggle {
+        display: flex; width: 100%; min-height: 56px; align-items: center;
+        justify-content: space-between; gap: 12px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 12px; padding: 12px 16px; cursor: pointer;
+        font: inherit; color: var(--text); text-align: left;
+      }
+      .toggle .tlabel { font-size: 16px; font-weight: 500; }
+      .toggle .track {
+        position: relative; flex-shrink: 0;
+        width: 56px; height: 32px; border-radius: 999px;
+        background: var(--track-off); transition: background .15s ease;
+      }
+      .toggle .knob {
+        position: absolute; top: 4px; left: 4px;
+        width: 24px; height: 24px; border-radius: 50%;
+        background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+        transition: left .15s ease;
+      }
+      .toggle[aria-checked="true"] .track { background: var(--gold-deep); }
+      .toggle[aria-checked="true"] .knob { left: 28px; }
+      .toggle.warn[aria-checked="true"] .track { background: var(--warn); }
+
+      .kv {
+        display: flex; justify-content: space-between; gap: 16px; padding: 6px 0;
+      }
+      .kv .k { color: var(--dim); flex-shrink: 0; }
+      .kv .v { text-align: right; font-weight: 500; overflow-wrap: anywhere; }
+      .kv-card { padding: 12px 20px; }
+      .flag { padding: 6px 0; font-weight: 600; color: var(--warn); }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px; overflow-wrap: anywhere;
+        background: var(--ice-soft); border-radius: 8px; padding: 8px 12px;
+      }
+      .note-box {
+        border: 1px solid var(--border); border-radius: 16px;
+        background: var(--surface); padding: 16px 20px;
+        font-size: 15px; color: var(--dim);
+      }
+      .alert { color: var(--warn); font-weight: 500; }
+      .snapshot-lines { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-size: 16px; }
+      .divider { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; }
+      button.insp-card { display: block; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+      .toast {
+        position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        background: var(--text); color: var(--bg);
+        padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 600;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25); z-index: 50; max-width: 90vw; text-align: center;
+      }
+      /* Decorative straw skep grounded at the very bottom of the page.
+         Pure decoration: static (nothing to animate, so reduced-motion
+         needs nothing), pointer-events off, sits in normal flow below
+         <main> so it can never cover content. */
+      .skep-footer {
+        position: relative; z-index: 1;
+        display: flex; justify-content: center;
+        padding: 4px 16px calc(30px + env(safe-area-inset-bottom));
+        pointer-events: none;
+      }
+      .skep-footer svg { display: block; width: 148px; height: auto; }
+      @media (min-width: 560px) { .skep-footer svg { width: 188px; } }
+    </style>
+  </head>
+  <body>
+    <canvas id="bee-bg" aria-hidden="true"></canvas>
+    <main id="app"></main>
+    <footer class="skep-footer" aria-hidden="true">
+      <svg viewBox="0 0 200 172" role="presentation" focusable="false">
+        <defs>
+          <clipPath id="skep-clip">
+            <path d="M100 16 C 57 16 35 66 33 146 L 167 146 C 165 66 143 16 100 16 Z" />
+          </clipPath>
+        </defs>
+        <!-- ground shadow -->
+        <ellipse cx="100" cy="163" rx="76" ry="6" fill="rgba(41,32,24,0.14)" />
+        <!-- stand: board + legs -->
+        <rect x="26" y="146" width="148" height="9" rx="3.5" fill="#8a6b45" />
+        <rect x="26" y="146" width="148" height="3.5" rx="1.75" fill="#a07d52" />
+        <rect x="42" y="155" width="10" height="9" rx="2" fill="#75582f" />
+        <rect x="148" y="155" width="10" height="9" rx="2" fill="#75582f" />
+        <!-- skep body -->
+        <path d="M100 16 C 57 16 35 66 33 146 L 167 146 C 165 66 143 16 100 16 Z" fill="#d9a844" />
+        <g clip-path="url(#skep-clip)">
+          <!-- coiled-straw banding: alternating straw tones, gently curved -->
+          <path d="M20 34 Q 100 46 180 34 L 180 48 Q 100 60 20 48 Z" fill="#c9973a" />
+          <path d="M20 62 Q 100 74 180 62 L 180 76 Q 100 88 20 76 Z" fill="#c9973a" />
+          <path d="M20 90 Q 100 102 180 90 L 180 104 Q 100 116 20 104 Z" fill="#c9973a" />
+          <path d="M20 118 Q 100 130 180 118 L 180 132 Q 100 144 20 132 Z" fill="#c9973a" />
+          <!-- soft light from the upper left -->
+          <ellipse cx="66" cy="58" rx="42" ry="58" fill="rgba(255,244,200,0.20)" />
+          <!-- band seams -->
+          <g stroke="rgba(122,84,26,0.55)" stroke-width="1.6" fill="none">
+            <path d="M20 48 Q 100 60 180 48" />
+            <path d="M20 76 Q 100 88 180 76" />
+            <path d="M20 104 Q 100 116 180 104" />
+            <path d="M20 132 Q 100 144 180 132" />
+          </g>
+        </g>
+        <!-- outline -->
+        <path d="M100 16 C 57 16 35 66 33 146 L 167 146 C 165 66 143 16 100 16 Z"
+              fill="none" stroke="rgba(122,84,26,0.45)" stroke-width="1.6" />
+        <!-- top loop handle -->
+        <path d="M91 17 a9 8 0 0 1 18 0" fill="none" stroke="#a87c2c" stroke-width="4" stroke-linecap="round" />
+        <!-- entrance: small dark arch near the base -->
+        <path d="M87 146 L 87 133 A 13 11 0 0 1 113 133 L 113 146 Z" fill="#3a2a16" />
+        <path d="M87 146 L 87 133 A 13 11 0 0 1 113 133 L 113 146" fill="none" stroke="rgba(58,42,22,0.6)" stroke-width="1.4" />
+      </svg>
+    </footer>
+    <div id="toast" class="toast" hidden></div>
+
+    <script>
+      "use strict";
+
+      // ------------------------------------------------------------------
+      // Storage — everything lives in this browser on this device only.
+      // No account, no server, no sync. If storage is blocked (private
+      // browsing), the app still works for the session in memory.
+      // ------------------------------------------------------------------
+      var STORE_KEY = "hive-tracker-public-v1";
+      var storageOK = true;
+
+      function blankState() {
+        return { hives: [], inspections: [], nextHiveId: 1, nextInspectionId: 1 };
+      }
+
+      function loadState() {
+        try {
+          var raw = window.localStorage.getItem(STORE_KEY);
+          if (!raw) return blankState();
+          var s = JSON.parse(raw);
+          if (!s || !Array.isArray(s.hives) || !Array.isArray(s.inspections)) return blankState();
+          if (typeof s.nextHiveId !== "number") s.nextHiveId = s.hives.length + 1;
+          if (typeof s.nextInspectionId !== "number") s.nextInspectionId = s.inspections.length + 1;
+          return s;
+        } catch (e) {
+          storageOK = false;
+          return blankState();
+        }
+      }
+
+      var state = loadState();
+
+      function saveState() {
+        if (!storageOK) return;
+        try {
+          window.localStorage.setItem(STORE_KEY, JSON.stringify(state));
+        } catch (e) {
+          storageOK = false;
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // Helpers
+      // ------------------------------------------------------------------
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function todayLocal() {
+        var d = new Date();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + m + "-" + day;
+      }
+      function formatDate(iso) {
+        if (!iso) return "—";
+        var d = new Date(iso + "T00:00:00");
+        if (isNaN(d.getTime())) return iso;
+        return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+      }
+      function findHive(id) {
+        for (var i = 0; i < state.hives.length; i++) if (state.hives[i].id === id) return state.hives[i];
+        return null;
+      }
+      function hiveName(h) {
+        if (h.hiveIdLabel && h.hiveIdLabel.trim()) return h.hiveIdLabel.trim();
+        if (h.hiveNumber && h.hiveNumber.trim()) return "Hive " + h.hiveNumber.trim();
+        return "Hive " + h.id;
+      }
+      function hiveInspections(hiveId) {
+        return state.inspections
+          .filter(function (x) { return x.hiveId === hiveId; })
+          .slice()
+          .sort(function (a, b) {
+            if (a.payload.date !== b.payload.date) return a.payload.date < b.payload.date ? 1 : -1;
+            return b.id - a.id;
+          });
+      }
+      function latestInspection(hiveId) {
+        var list = hiveInspections(hiveId);
+        return list.length ? list[0] : null;
+      }
+      function findInspection(id) {
+        for (var i = 0; i < state.inspections.length; i++) if (state.inspections[i].id === id) return state.inspections[i];
+        return null;
+      }
+      function numStr(v) { return v === null || v === undefined || v === "" ? "" : String(v); }
+      function yn(v) { return v ? "Yes" : "No"; }
+
+      var toastTimer = null;
+      function toast(msg) {
+        var el = document.getElementById("toast");
+        el.textContent = msg;
+        el.hidden = false;
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
+      }
+
+      // Host-aware address for NFC tags.
+      // - On a Muse address (a .metaaivm.com spaces host, or a muse.ai
+      //   share-gateway address), use the canonical content-host
+      //   fallback: inside Muse, window.location is the internal
+      //   .metaaivm.com spaces address (unresolvable in Safari), and the
+      //   muse.ai share gateway can drop the #/hive/<id> fragment on
+      //   redirect.
+      // - On any other host (Joey's own domain, or any independent host
+      //   serving this standalone file), build the link from the page's
+      //   own address so the tag points at the copy the beekeeper is
+      //   actually using: same scheme, host, and path, with any query
+      //   string / existing fragment stripped, plus #/hive/<id>.
+      // No query string, no updated_at_ms, either way.
+      var FALLBACK_BASE = "https://ac69xmtxnxwqlxw.cf.metaaiusercontent.com/index.html";
+      function buildHiveLink(hiveId) {
+        var host = window.location.hostname || "";
+        var isMuseHost =
+          host === "muse.ai" || host.slice(-9) === ".muse.ai" ||
+          host === "metaaivm.com" || host.slice(-13) === ".metaaivm.com";
+        if (isMuseHost) {
+          return FALLBACK_BASE + "#/hive/" + hiveId;
+        }
+        var base = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        return base + "#/hive/" + hiveId;
+      }
+
+      // ------------------------------------------------------------------
+      // Routing — each hive lives at #/hive/<id> so an NFC tag written
+      // with this page's address plus that fragment opens it directly.
+      // ------------------------------------------------------------------
+      function parseRoute(hash) {
+        var parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+        if (parts.length === 0) return { name: "home" };
+        if (parts[0] === "new-hive") return { name: "newHive" };
+        if (parts[0] === "hive" && parts[1]) {
+          var hiveId = Number(parts[1]);
+          if (!isFinite(hiveId)) return { name: "home" };
+          if (parts[2] === "edit") return { name: "editHive", hiveId: hiveId };
+          if (parts[2] === "new") return { name: "newInspection", hiveId: hiveId };
+          if (parts[2] === "inspection" && parts[3]) {
+            var inspectionId = Number(parts[3]);
+            if (!isFinite(inspectionId)) return { name: "hive", hiveId: hiveId };
+            if (parts[4] === "edit") return { name: "editInspection", hiveId: hiveId, inspectionId: inspectionId };
+            return { name: "inspection", hiveId: hiveId, inspectionId: inspectionId };
+          }
+          return { name: "hive", hiveId: hiveId };
+        }
+        return { name: "home" };
+      }
+      function navigate(hash) { window.location.hash = hash; }
+
+      // ------------------------------------------------------------------
+      // Inspection payload — Brandy's checklist fields
+      // ------------------------------------------------------------------
+      function emptyPayload() {
+        return {
+          date: todayLocal(), timeOfDay: "", inspector: "", location: "",
+          currentConfiguration: "", weather: "", temperature: "", recentConditions: "",
+          previousInspectionDate: "", entranceSize: "", queenPresent: false, queenSigns: "",
+          framesOfBees: null, framesOfBrood: null, framesCappedBrood: null, framesOpenBrood: null,
+          broodPattern: "", droneBroodPresent: false,
+          honeyFrames: null, pollenFrames: null, nectarPresent: false, pollenComingIn: false,
+          feedingNeeded: false, feedingType: "",
+          chalkbrood: false, sacbrood: false, deformedWingVirus: false, efbAfb: false,
+          smallHiveBeetle: false, waxMothDamage: false,
+          miteTestType: "", miteCount: null, miteLoadAssessment: "", treatmentApplied: "",
+          treatmentDate: "", followUpTestScheduled: false,
+          spaceAdequate: false, swarmIndicatorsPresent: false,
+          correctiveActions: "", nextPlannedActions: "",
+          temperament: "", forgetNotes: ""
+        };
+      }
+
+      // ------------------------------------------------------------------
+      // Small HTML builders
+      // ------------------------------------------------------------------
+      function backBtn(label, to) {
+        return '<button type="button" class="link-btn" data-nav="' + esc(to) + '" aria-label="' + esc(label) + '">‹ ' + esc(label) + "</button>";
+      }
+      function section(title, inner) {
+        return '<section class="block"><h2 class="font-display">' + esc(title) + '</h2><div class="body">' + inner + "</div></section>";
+      }
+      function textField(label, key, value, opts) {
+        opts = opts || {};
+        return '<label class="field"><span>' + esc(label) + "</span>" +
+          '<input class="input" type="' + (opts.type || "text") + '"' +
+          (opts.inputMode ? ' inputmode="' + opts.inputMode + '"' : "") +
+          ' data-field="' + key + '" value="' + esc(value) + '"' +
+          (opts.placeholder ? ' placeholder="' + esc(opts.placeholder) + '"' : "") +
+          ' aria-label="' + esc(label) + '"></label>';
+      }
+      function numField(label, key, value, step) {
+        return '<label class="field"><span>' + esc(label) + "</span>" +
+          '<input class="input" type="number" inputmode="decimal" min="0" step="' + (step || "1") + '"' +
+          ' data-field="' + key + '" value="' + esc(numStr(value)) + '" placeholder="—" aria-label="' + esc(label) + '"></label>';
+      }
+      function areaField(label, key, value, placeholder) {
+        return '<label class="field"><span>' + esc(label) + "</span>" +
+          '<textarea class="input" data-field="' + key + '" placeholder="' + esc(placeholder || "") + '" aria-label="' + esc(label) + '">' +
+          esc(value) + "</textarea></label>";
+      }
+      function toggleField(label, key, value, warn) {
+        return '<button type="button" class="toggle' + (warn ? " warn" : "") + '" role="switch" aria-checked="' + (value ? "true" : "false") +
+          '" data-toggle="' + key + '" aria-label="' + esc(label) + '"><span class="tlabel">' + esc(label) +
+          '</span><span class="track"><span class="knob"></span></span></button>';
+      }
+      function kv(label, value) {
+        if (value === "" || value === null || value === undefined) return "";
+        return '<div class="kv"><span class="k">' + esc(label) + '</span><span class="v">' + esc(value) + "</span></div>";
+      }
+
+      // ------------------------------------------------------------------
+      // Views
+      // ------------------------------------------------------------------
+      var app = document.getElementById("app");
+      var formData = null;        // working copy for the open form
+      var confirmState = null;    // "delete-hive" | "delete-inspection" | null
+
+      function storageNote() {
+        if (!storageOK) {
+          return '<div class="note-box mt6" role="alert">This browser is blocking local saving (private browsing?), so entries will only last while this page stays open. Turn off private browsing to keep them.</div>';
+        }
+        return '<div class="note-box mt6">Your hives and inspections are saved <strong>on this device, in this browser</strong> — no account, no server, nothing is sent anywhere, and nobody else can see them. They don\'t sync to other phones or browsers, so export a backup with the button below before switching phones or clearing browser data.</div>';
+      }
+
+      function viewHome() {
+        var html = '<p class="kicker">Your apiary · inspection log</p>' +
+          '<h1 class="font-display">Your hives</h1>';
+        if (state.hives.length === 0) {
+          html += '<div class="card mt8" style="text-align:center">' +
+            '<p class="font-display" style="font-size:20px;font-weight:700">No hives yet</p>' +
+            '<p class="dim mt2">Add your first hive to start logging inspections. Each hive gets its own page you can open with an NFC tag.</p></div>';
+        } else {
+          html += '<div class="stack-lg mt6">';
+          state.hives.forEach(function (h) {
+            var list = hiveInspections(h.id);
+            var lastLine = list.length === 0 ? "No inspections yet" :
+              "Last inspection: " + formatDate(list[0].payload.date) + " · " + list.length + " total";
+            var queen = h.queenType ? "Queen: " + h.queenType + (h.queenColor ? " · " + h.queenColor : "") + (h.queenMarked ? " · marked" : "") : "";
+            html += '<button type="button" class="card hive-card" data-nav="#/hive/' + h.id + '" aria-label="Open ' + esc(hiveName(h)) + '">' +
+              '<span class="font-display" style="display:block;font-size:24px;font-weight:700">' + esc(hiveName(h)) + "</span>" +
+              ((h.hiveType || h.standardConfiguration) ? '<span class="dim" style="display:block;margin-top:4px">' + esc([h.hiveType, h.standardConfiguration].filter(Boolean).join(" · ")) + "</span>" : "") +
+              '<span style="display:block;margin-top:12px">' + esc(lastLine) + "</span>" +
+              (queen ? '<span class="dim" style="display:block;margin-top:4px">' + esc(queen) + "</span>" : "") +
+              "</button>";
+          });
+          html += "</div>";
+        }
+        html += '<button type="button" class="btn-primary mt8" data-nav="#/new-hive" aria-label="Add a hive">+ Add a hive</button>';
+        html += storageNote();
+        html += '<button type="button" class="btn-ghost mt3" id="export-all" aria-label="Export all inspections as a spreadsheet file">Export all inspections (CSV)</button>';
+        return html;
+      }
+
+      function snapshotHTML(p, heading) {
+        var lines = "";
+        lines += "<span>Queen: " + (p.queenPresent ? "seen" : "not seen") + (p.queenSigns ? " · signs: " + esc(p.queenSigns) : "") + "</span>";
+        if (p.framesOfBees !== null) lines += "<span>Frames of bees: " + p.framesOfBees + "</span>";
+        if (p.miteCount !== null) lines += "<span>Mites: " + p.miteCount + " / 100 bees" + (p.treatmentApplied ? " · treated: " + esc(p.treatmentApplied) : "") + "</span>";
+        if (p.temperament) lines += "<span>Temperament: " + esc(p.temperament) + "</span>";
+        if (p.nextPlannedActions) lines += "<span>Planned: " + esc(p.nextPlannedActions) + "</span>";
+        if (p.forgetNotes) lines += '<span style="font-weight:600">Don\'t forget: ' + esc(p.forgetNotes) + "</span>";
+        return '<div class="card-soft"><h2 class="font-display" style="font-size:18px;font-weight:700">' + esc(heading) + " — " + esc(formatDate(p.date)) + '</h2><div class="snapshot-lines">' + lines + "</div></div>";
+      }
+
+      function viewHive(hiveId) {
+        var hive = findHive(hiveId);
+        if (!hive) {
+          return backBtn("All hives", "#/") + '<p class="dim mt4">This hive doesn\'t exist on this device anymore.</p>';
+        }
+        var name = hiveName(hive);
+        var list = hiveInspections(hiveId);
+        var last = list.length ? list[0] : null;
+        var link = buildHiveLink(hive.id);
+        var html = backBtn("All hives", "#/") +
+          '<h1 class="font-display">' + esc(name) + "</h1>" +
+          ((hive.hiveType || hive.standardConfiguration) ? '<p class="dim mt1">' + esc([hive.hiveType, hive.standardConfiguration].filter(Boolean).join(" · ")) + "</p>" : "") +
+          '<button type="button" class="btn-primary big mt6" data-nav="#/hive/' + hive.id + '/new" aria-label="Start a new inspection">+ New inspection</button>';
+        if (last) html += '<div class="mt6">' + snapshotHTML(last.payload, "Last time") + "</div>";
+
+        var queenInner = '<div class="card kv-card">' +
+          kv("Marked?", hive.queenMarked ? "Yes" : "") +
+          kv("Color", hive.queenColor) + kv("Origin", hive.queenOrigin) +
+          kv("Approximate age", hive.queenAge) + kv("Type", hive.queenType) +
+          (!hive.queenMarked && !hive.queenColor && !hive.queenOrigin && !hive.queenAge && !hive.queenType ? '<p class="dim" style="padding:8px 0">No queen info yet.</p>' : "") +
+          "</div>" +
+          '<button type="button" class="btn-ghost" data-nav="#/hive/' + hive.id + '/edit" aria-label="Edit hive and queen info">Edit hive &amp; queen</button>';
+        html += section("Queen", queenInner);
+
+        var nfcInner = '<div class="card">' +
+          "<p>Write this hive's link to an NFC tag and tap your phone to the tag to land right here:</p>" +
+          '<p class="mono mt3">' + esc(link) + "</p>" +
+          '<p class="dim mt2" style="font-size:14px">That\'s the exact link to write to the tag — one https:// address ending in #/hive/' + hive.id + '. Copy it below and paste it into your NFC writer app as a URL / URI record.</p>' +
+          '<button type="button" class="btn-primary mt3" id="copy-link" data-link="' + esc(link) + '" aria-label="Copy this hive\'s full NFC link">Copy full link for NFC tag</button>' +
+          "</div>";
+        html += section("NFC tag link", nfcInner);
+
+        var histInner = "";
+        if (list.length === 0) {
+          histInner = '<p class="dim">No inspections saved yet. Tap "New inspection" after your next hive check.</p>';
+        } else {
+          histInner = '<div class="stack">';
+          list.forEach(function (ins) {
+            var p = ins.payload;
+            var sub = "Queen " + (p.queenPresent ? "seen ✓" : "not seen") +
+              (p.framesOfBees !== null ? " · " + p.framesOfBees + " frames of bees" : "") +
+              (p.miteCount !== null ? " · mites " + p.miteCount + "/100" : "") +
+              (p.inspector ? " · " + p.inspector : "");
+            histInner += '<button type="button" class="card insp-card" data-nav="#/hive/' + hive.id + "/inspection/" + ins.id + '" aria-label="View inspection from ' + esc(formatDate(p.date)) + '">' +
+              '<span style="display:block;font-size:18px;font-weight:700">' + esc(formatDate(p.date)) + (p.timeOfDay ? " · " + esc(p.timeOfDay) : "") + "</span>" +
+              '<span class="dim" style="display:block;margin-top:4px">' + esc(sub) + "</span></button>";
+          });
+          histInner += "</div>";
+        }
+        html += section("Inspection history (" + list.length + ")", histInner);
+
+        if (list.length > 0) {
+          html += '<button type="button" class="btn-ghost mt6" id="export-hive" aria-label="Export this hive\'s inspections as a spreadsheet file">Export ' + esc(name) + " inspections (CSV)</button>";
+        }
+
+        html += '<div class="divider">';
+        if (confirmState === "delete-hive") {
+          html += '<p style="font-weight:500">Delete ' + esc(name) + " and all its inspections from this device?</p>" +
+            '<div class="row-flex mt3"><button type="button" class="btn-danger-solid" id="confirm-delete-hive" aria-label="Confirm delete hive">Yes, delete</button>' +
+            '<button type="button" class="btn-cancel" id="cancel-confirm" aria-label="Cancel delete hive">Cancel</button></div>';
+        } else {
+          html += '<button type="button" class="link-btn danger-link" id="ask-delete-hive" aria-label="Delete this hive">Delete this hive</button>';
+        }
+        html += "</div>";
+        return html;
+      }
+
+      // ------------------------------------------------------------------
+      // Hive form (Title sheet: hive + queen info)
+      // ------------------------------------------------------------------
+      function viewHiveForm(route) {
+        var isEdit = route.name === "editHive";
+        var hive = isEdit ? findHive(route.hiveId) : null;
+        if (isEdit && !hive) return backBtn("All hives", "#/") + '<p class="alert mt4">This hive doesn\'t exist anymore.</p>';
+        var f = formData;
+        var html = backBtn("Back", isEdit ? "#/hive/" + hive.id : "#/") +
+          '<h1 class="font-display">' + (isEdit ? "Edit " + esc(hiveName(hive)) : "Add a hive") + "</h1>";
+        html += section("Hive",
+          textField("Hive ID", "hiveIdLabel", f.hiveIdLabel, { placeholder: "e.g. NHB-01" }) +
+          textField("Hive number", "hiveNumber", f.hiveNumber, { placeholder: "e.g. 1" }) +
+          textField("Hive type", "hiveType", f.hiveType, { placeholder: "e.g. Langstroth, top-bar, Warre" }) +
+          textField("Standard configuration", "standardConfiguration", f.standardConfiguration, { placeholder: "e.g. 2 deep brood boxes + 1 medium super" }));
+        html += section("Queen",
+          toggleField("Queen marked?", "queenMarked", f.queenMarked) +
+          textField("Color queen", "queenColor", f.queenColor, { placeholder: "Marking color, e.g. yellow" }) +
+          textField("Queen origin", "queenOrigin", f.queenOrigin, { placeholder: "e.g. package, nuc, swarm, raised" }) +
+          textField("Approximate age?", "queenAge", f.queenAge, { placeholder: "e.g. 2025 queen, ~1 year" }) +
+          textField("Type of Queen", "queenType", f.queenType, { placeholder: "e.g. Italian, Carniolan, local mutt" }));
+        html += '<p class="alert mt6" id="form-error" role="alert" hidden></p>' +
+          '<button type="button" class="btn-primary mt6" id="save-hive" aria-label="' + (isEdit ? "Save changes" : "Save hive") + '">' + (isEdit ? "Save changes" : "Save hive") + "</button>";
+        return html;
+      }
+
+      // ------------------------------------------------------------------
+      // Inspection form — sections in Brandy's order
+      // ------------------------------------------------------------------
+      function viewInspectionForm(route) {
+        var hive = findHive(route.hiveId);
+        if (!hive) return backBtn("All hives", "#/") + '<p class="alert mt4">This hive doesn\'t exist anymore.</p>';
+        var isEdit = route.name === "editInspection";
+        var p = formData;
+        var name = hiveName(hive);
+        var html = backBtn(name, isEdit ? "#/hive/" + hive.id + "/inspection/" + route.inspectionId : "#/hive/" + hive.id) +
+          '<h1 class="font-display">' + (isEdit ? "Edit inspection" : "New inspection") + "</h1>";
+
+        if (!isEdit) {
+          var prev = latestInspection(hive.id);
+          if (prev) {
+            var pp = prev.payload;
+            var prevLines = "<span>Queen: " + (pp.queenPresent ? "seen" : "not seen") + " · Bees: " + (pp.framesOfBees === null ? "—" : pp.framesOfBees) + " frames · Brood: " + (pp.framesOfBrood === null ? "—" : pp.framesOfBrood) + " frames</span>" +
+              "<span>Honey: " + (pp.honeyFrames === null ? "—" : pp.honeyFrames) + " · Pollen: " + (pp.pollenFrames === null ? "—" : pp.pollenFrames) + (pp.miteCount !== null ? " · Mites: " + pp.miteCount + "/100" : "") + "</span>" +
+              (pp.forgetNotes ? '<span style="font-weight:600">Last time you noted: ' + esc(pp.forgetNotes) + "</span>" : "") +
+              (pp.nextPlannedActions ? "<span>Planned for today: " + esc(pp.nextPlannedActions) + "</span>" : "");
+            html += '<div class="card-soft mt4"><h2 class="font-display" style="font-size:18px;font-weight:700">Previous inspection — ' + esc(formatDate(pp.date)) + '</h2><div class="snapshot-lines">' + prevLines + "</div></div>";
+          }
+        }
+
+        html += section("1 · Parameter",
+          '<div class="grid2">' +
+            textField("Date", "date", p.date, { type: "date" }) +
+            textField("Time of day", "timeOfDay", p.timeOfDay, { type: "time" }) +
+          "</div>" +
+          textField("Inspector", "inspector", p.inspector, { placeholder: "Who inspected" }) +
+          textField("Location", "location", p.location, { placeholder: "Where the hive sits" }) +
+          textField("Current configuration", "currentConfiguration", p.currentConfiguration, { placeholder: "Boxes / supers on today" }) +
+          '<div class="grid2">' +
+            textField("Weather", "weather", p.weather, { placeholder: "Sunny, overcast…" }) +
+            textField("Temperature", "temperature", p.temperature, { placeholder: "°F", inputMode: "decimal" }) +
+          "</div>" +
+          textField("Recent conditions", "recentConditions", p.recentConditions, { placeholder: "Rain this week, heat wave, dearth…" }) +
+          textField("Previous inspection date", "previousInspectionDate", p.previousInspectionDate, { type: "date" }) +
+          textField("Entrance size", "entranceSize", p.entranceSize, { placeholder: "Full, reduced, reducer setting…" }) +
+          toggleField("Queen present (seen)", "queenPresent", p.queenPresent) +
+          textField("Queen signs if not spotted", "queenSigns", p.queenSigns, { placeholder: "Eggs, young larvae, queen cells…" }));
+
+        html += section("2 · Health",
+          '<div class="grid2">' +
+            numField("Frames of bees", "framesOfBees", p.framesOfBees) +
+            numField("Frames of brood (total)", "framesOfBrood", p.framesOfBrood) +
+            numField("Frames of capped brood", "framesCappedBrood", p.framesCappedBrood) +
+            numField("Frames of open brood", "framesOpenBrood", p.framesOpenBrood) +
+          "</div>" +
+          textField("Brood pattern", "broodPattern", p.broodPattern, { placeholder: "Solid, spotty, shotgun…" }) +
+          toggleField("Drone brood present", "droneBroodPresent", p.droneBroodPresent));
+
+        html += section("3 · Stores and flow",
+          '<div class="grid2">' +
+            numField("Honey frames", "honeyFrames", p.honeyFrames) +
+            numField("Pollen frames", "pollenFrames", p.pollenFrames) +
+          "</div>" +
+          toggleField("Nectar present", "nectarPresent", p.nectarPresent) +
+          toggleField("Pollen coming in", "pollenComingIn", p.pollenComingIn) +
+          toggleField("Feeding needed", "feedingNeeded", p.feedingNeeded) +
+          textField("Type of feeding", "feedingType", p.feedingType, { placeholder: "1:1 syrup, 2:1, pollen patty, fondant…" }));
+
+        html += section("4 · Disease & pest check",
+          toggleField("Chalkbrood", "chalkbrood", p.chalkbrood, true) +
+          toggleField("Sacbrood", "sacbrood", p.sacbrood, true) +
+          toggleField("Deformed wing virus", "deformedWingVirus", p.deformedWingVirus, true) +
+          toggleField("EFB / AFB", "efbAfb", p.efbAfb, true) +
+          toggleField("Small hive beetle", "smallHiveBeetle", p.smallHiveBeetle, true) +
+          toggleField("Wax moth damage", "waxMothDamage", p.waxMothDamage, true));
+
+        html += section("5 · Mite monitoring",
+          textField("Mite test type", "miteTestType", p.miteTestType, { placeholder: "Alcohol wash, sugar roll, drop…" }) +
+          numField("Mite count (# / 100 bees)", "miteCount", p.miteCount, "0.1") +
+          textField("Mite load assessment", "miteLoadAssessment", p.miteLoadAssessment, { placeholder: "Low, watch, treat now…" }) +
+          textField("Treatment applied", "treatmentApplied", p.treatmentApplied, { placeholder: "Product / method, or none" }) +
+          textField("Treatment date", "treatmentDate", p.treatmentDate, { type: "date" }) +
+          toggleField("Follow-up test scheduled", "followUpTestScheduled", p.followUpTestScheduled));
+
+        html += section("6 · Space management",
+          toggleField("Space adequate", "spaceAdequate", p.spaceAdequate) +
+          toggleField("Swarm indicators present", "swarmIndicatorsPresent", p.swarmIndicatorsPresent, true) +
+          areaField("Corrective actions taken", "correctiveActions", p.correctiveActions, "Added a super, split, requeened…") +
+          areaField("Next planned actions", "nextPlannedActions", p.nextPlannedActions, "What to do next visit"));
+
+        html += section("7 · Notes",
+          textField("Temperament", "temperament", p.temperament, { placeholder: "Calm, nervous, defensive…" }) +
+          areaField("Anything you might forget before next inspection", "forgetNotes", p.forgetNotes, "The thing you'd kick yourself for forgetting"));
+
+        html += '<p class="alert mt6" id="form-error" role="alert" hidden></p>' +
+          '<button type="button" class="btn-primary big mt6" id="save-inspection" aria-label="Save inspection">Save inspection</button>' +
+          '<p class="dim mt3" style="text-align:center;font-size:14px">Saved to ' + esc(name) + "'s history on this device</p>";
+        return html;
+      }
+
+      // ------------------------------------------------------------------
+      // Inspection detail — the full saved record
+      // ------------------------------------------------------------------
+      function viewInspection(route) {
+        var hive = findHive(route.hiveId);
+        var ins = findInspection(route.inspectionId);
+        if (!ins || ins.hiveId !== route.hiveId) {
+          return backBtn("Back to hive", "#/hive/" + route.hiveId) + '<p class="dim mt4">That inspection doesn\'t exist on this device anymore.</p>';
+        }
+        var p = ins.payload;
+        var diseases = [];
+        if (p.chalkbrood) diseases.push("Chalkbrood");
+        if (p.sacbrood) diseases.push("Sacbrood");
+        if (p.deformedWingVirus) diseases.push("Deformed wing virus");
+        if (p.efbAfb) diseases.push("EFB / AFB");
+        if (p.smallHiveBeetle) diseases.push("Small hive beetle");
+        if (p.waxMothDamage) diseases.push("Wax moth damage");
+
+        var html = backBtn(hive ? hiveName(hive) : "Back to hive", "#/hive/" + route.hiveId) +
+          '<h1 class="font-display">' + esc(formatDate(p.date)) + "</h1>" +
+          ((p.timeOfDay || p.inspector) ? '<p class="dim mt1">' + esc([p.timeOfDay, p.inspector].filter(Boolean).join(" · ")) + "</p>" : "");
+
+        html += section("1 · Parameter", '<div class="card kv-card">' +
+          kv("Location", p.location) + kv("Current configuration", p.currentConfiguration) +
+          kv("Weather", p.weather) + kv("Temperature", p.temperature) +
+          kv("Recent conditions", p.recentConditions) +
+          kv("Previous inspection", p.previousInspectionDate ? formatDate(p.previousInspectionDate) : "") +
+          kv("Entrance size", p.entranceSize) + kv("Queen present", yn(p.queenPresent)) +
+          kv("Queen signs", p.queenSigns) + "</div>");
+
+        html += section("2 · Health", '<div class="card kv-card">' +
+          kv("Frames of bees", numStr(p.framesOfBees)) +
+          kv("Frames of brood (total)", numStr(p.framesOfBrood)) +
+          kv("Frames of capped brood", numStr(p.framesCappedBrood)) +
+          kv("Frames of open brood", numStr(p.framesOpenBrood)) +
+          kv("Brood pattern", p.broodPattern) +
+          kv("Drone brood present", yn(p.droneBroodPresent)) + "</div>");
+
+        html += section("3 · Stores and flow", '<div class="card kv-card">' +
+          kv("Honey frames", numStr(p.honeyFrames)) +
+          kv("Pollen frames", numStr(p.pollenFrames)) +
+          kv("Nectar present", yn(p.nectarPresent)) +
+          kv("Pollen coming in", yn(p.pollenComingIn)) +
+          kv("Feeding needed", yn(p.feedingNeeded)) +
+          kv("Type of feeding", p.feedingType) + "</div>");
+
+        var diseaseInner = diseases.length === 0
+          ? '<p style="padding:8px 0">Nothing flagged on this check.</p>'
+          : diseases.map(function (d) { return '<p class="flag">⚠ ' + esc(d) + "</p>"; }).join("");
+        html += section("4 · Disease & pest check", '<div class="card kv-card">' + diseaseInner + "</div>");
+
+        html += section("5 · Mite monitoring", '<div class="card kv-card">' +
+          kv("Test type", p.miteTestType) +
+          kv("Mite count (#/100 bees)", numStr(p.miteCount)) +
+          kv("Load assessment", p.miteLoadAssessment) +
+          kv("Treatment applied", p.treatmentApplied) +
+          kv("Treatment date", p.treatmentDate ? formatDate(p.treatmentDate) : "") +
+          kv("Follow-up scheduled", yn(p.followUpTestScheduled)) + "</div>");
+
+        html += section("6 · Space management", '<div class="card kv-card">' +
+          kv("Space adequate", yn(p.spaceAdequate)) +
+          kv("Swarm indicators", yn(p.swarmIndicatorsPresent)) +
+          kv("Corrective actions", p.correctiveActions) +
+          kv("Next planned actions", p.nextPlannedActions) + "</div>");
+
+        html += section("7 · Notes", '<div class="card kv-card">' +
+          kv("Temperament", p.temperament) +
+          kv("Don't forget", p.forgetNotes) + "</div>");
+
+        html += '<button type="button" class="btn-ghost mt8" style="min-height:56px;font-size:18px;font-weight:700" data-nav="#/hive/' + route.hiveId + "/inspection/" + ins.id + '/edit" aria-label="Edit this inspection">Edit this inspection</button>';
+
+        html += '<div class="mt6">';
+        if (confirmState === "delete-inspection") {
+          html += '<div class="row-flex"><button type="button" class="btn-danger-solid" id="confirm-delete-inspection" aria-label="Confirm delete inspection">Yes, delete</button>' +
+            '<button type="button" class="btn-cancel" id="cancel-confirm" aria-label="Cancel delete inspection">Cancel</button></div>';
+        } else {
+          html += '<button type="button" class="link-btn danger-link" id="ask-delete-inspection" aria-label="Delete this inspection">Delete this inspection</button>';
+        }
+        html += "</div>";
+        return html;
+      }
+
+      // ------------------------------------------------------------------
+      // CSV export — one row per inspection, opens in any spreadsheet app
+      // ------------------------------------------------------------------
+      var CSV_COLS = [
+        ["Hive ID", function (h) { return h.hiveIdLabel; }],
+        ["Hive number", function (h) { return h.hiveNumber; }],
+        ["Hive type", function (h) { return h.hiveType; }],
+        ["Date", function (h, p) { return p.date; }],
+        ["Time of day", function (h, p) { return p.timeOfDay; }],
+        ["Inspector", function (h, p) { return p.inspector; }],
+        ["Location", function (h, p) { return p.location; }],
+        ["Current configuration", function (h, p) { return p.currentConfiguration; }],
+        ["Weather", function (h, p) { return p.weather; }],
+        ["Temperature", function (h, p) { return p.temperature; }],
+        ["Recent conditions", function (h, p) { return p.recentConditions; }],
+        ["Previous inspection date", function (h, p) { return p.previousInspectionDate; }],
+        ["Entrance size", function (h, p) { return p.entranceSize; }],
+        ["Queen present", function (h, p) { return yn(p.queenPresent); }],
+        ["Queen signs if not spotted", function (h, p) { return p.queenSigns; }],
+        ["Frames of bees", function (h, p) { return numStr(p.framesOfBees); }],
+        ["Frames of brood (total)", function (h, p) { return numStr(p.framesOfBrood); }],
+        ["Frames of capped brood", function (h, p) { return numStr(p.framesCappedBrood); }],
+        ["Frames of open brood", function (h, p) { return numStr(p.framesOpenBrood); }],
+        ["Brood pattern", function (h, p) { return p.broodPattern; }],
+        ["Drone brood present", function (h, p) { return yn(p.droneBroodPresent); }],
+        ["Honey frames", function (h, p) { return numStr(p.honeyFrames); }],
+        ["Pollen frames", function (h, p) { return numStr(p.pollenFrames); }],
+        ["Nectar present", function (h, p) { return yn(p.nectarPresent); }],
+        ["Pollen coming in", function (h, p) { return yn(p.pollenComingIn); }],
+        ["Feeding needed", function (h, p) { return yn(p.feedingNeeded); }],
+        ["Type of feeding", function (h, p) { return p.feedingType; }],
+        ["Chalkbrood", function (h, p) { return yn(p.chalkbrood); }],
+        ["Sacbrood", function (h, p) { return yn(p.sacbrood); }],
+        ["Deformed wing virus", function (h, p) { return yn(p.deformedWingVirus); }],
+        ["EFB/AFB", function (h, p) { return yn(p.efbAfb); }],
+        ["Small hive beetle", function (h, p) { return yn(p.smallHiveBeetle); }],
+        ["Wax moth damage", function (h, p) { return yn(p.waxMothDamage); }],
+        ["Mite test type", function (h, p) { return p.miteTestType; }],
+        ["Mite count (#/100 bees)", function (h, p) { return numStr(p.miteCount); }],
+        ["Mite load assessment", function (h, p) { return p.miteLoadAssessment; }],
+        ["Treatment applied", function (h, p) { return p.treatmentApplied; }],
+        ["Treatment date", function (h, p) { return p.treatmentDate; }],
+        ["Follow-up test scheduled", function (h, p) { return yn(p.followUpTestScheduled); }],
+        ["Space adequate", function (h, p) { return yn(p.spaceAdequate); }],
+        ["Swarm indicators present", function (h, p) { return yn(p.swarmIndicatorsPresent); }],
+        ["Corrective actions taken", function (h, p) { return p.correctiveActions; }],
+        ["Next planned actions", function (h, p) { return p.nextPlannedActions; }],
+        ["Temperament", function (h, p) { return p.temperament; }],
+        ["Anything you might forget", function (h, p) { return p.forgetNotes; }]
+      ];
+      function csvCell(v) {
+        var s = String(v == null ? "" : v);
+        return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }
+      function exportCSV(hiveId) {
+        var rows = [CSV_COLS.map(function (c) { return csvCell(c[0]); }).join(",")];
+        var items = state.inspections.filter(function (ins) { return hiveId == null || ins.hiveId === hiveId; });
+        items.sort(function (a, b) {
+          if (a.hiveId !== b.hiveId) return a.hiveId - b.hiveId;
+          return a.payload.date < b.payload.date ? -1 : a.payload.date > b.payload.date ? 1 : a.id - b.id;
+        });
+        items.forEach(function (ins) {
+          var hive = findHive(ins.hiveId) || { hiveIdLabel: "", hiveNumber: "", hiveType: "" };
+          rows.push(CSV_COLS.map(function (c) { return csvCell(c[1](hive, ins.payload)); }).join(","));
+        });
+        var blob = new Blob(["\ufeff" + rows.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = hiveId == null ? "hive-inspections.csv" : "hive-" + hiveId + "-inspections.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        toast("Export downloaded");
+      }
+
+      // ------------------------------------------------------------------
+      // Form setup per route
+      // ------------------------------------------------------------------
+      function blankHiveFields() {
+        return { hiveIdLabel: "", hiveNumber: "", hiveType: "", standardConfiguration: "",
+          queenMarked: false, queenColor: "", queenOrigin: "", queenAge: "", queenType: "" };
+      }
+      function setupForm(route) {
+        formData = null;
+        if (route.name === "newHive") formData = blankHiveFields();
+        if (route.name === "editHive") {
+          var h = findHive(route.hiveId);
+          if (h) formData = { hiveIdLabel: h.hiveIdLabel, hiveNumber: h.hiveNumber, hiveType: h.hiveType,
+            standardConfiguration: h.standardConfiguration, queenMarked: h.queenMarked, queenColor: h.queenColor,
+            queenOrigin: h.queenOrigin, queenAge: h.queenAge, queenType: h.queenType };
+        }
+        if (route.name === "newInspection") {
+          var hive = findHive(route.hiveId);
+          var p = emptyPayload();
+          var prev = latestInspection(route.hiveId);
+          if (prev) {
+            p.previousInspectionDate = prev.payload.date;
+            p.location = prev.payload.location;
+            p.currentConfiguration = prev.payload.currentConfiguration;
+            p.inspector = prev.payload.inspector;
+            p.entranceSize = prev.payload.entranceSize;
+          } else if (hive && hive.standardConfiguration) {
+            p.currentConfiguration = hive.standardConfiguration;
+          }
+          formData = p;
+        }
+        if (route.name === "editInspection") {
+          var ins = findInspection(route.inspectionId);
+          if (ins) {
+            formData = {};
+            var src = emptyPayload();
+            for (var k in src) formData[k] = ins.payload[k] !== undefined ? ins.payload[k] : src[k];
+          }
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // Render + events
+      // ------------------------------------------------------------------
+      var currentRoute = null;
+
+      function render() {
+        var route = parseRoute(window.location.hash);
+        currentRoute = route;
+        var html = "";
+        if (route.name === "home") html = viewHome();
+        else if (route.name === "hive") html = viewHive(route.hiveId);
+        else if (route.name === "newHive" || route.name === "editHive") html = viewHiveForm(route);
+        else if (route.name === "newInspection" || route.name === "editInspection") html = viewInspectionForm(route);
+        else if (route.name === "inspection") html = viewInspection(route);
+        app.innerHTML = html;
+        bindEvents(route);
+        window.scrollTo(0, 0);
+      }
+
+      function formError(msg) {
+        var el = document.getElementById("form-error");
+        if (el) { el.textContent = msg; el.hidden = !msg; }
+      }
+
+      function bindEvents(route) {
+        var navEls = app.querySelectorAll("[data-nav]");
+        for (var i = 0; i < navEls.length; i++) {
+          navEls[i].addEventListener("click", function () { navigate(this.getAttribute("data-nav")); });
+        }
+
+        // Form fields write straight into formData (no re-render, so the
+        // keyboard never loses focus mid-typing).
+        var fields = app.querySelectorAll("[data-field]");
+        for (var j = 0; j < fields.length; j++) {
+          fields[j].addEventListener("input", function () {
+            if (!formData) return;
+            var key = this.getAttribute("data-field");
+            if (this.type === "number") {
+              var v = this.value;
+              formData[key] = v === "" ? null : (isFinite(Number(v)) ? Number(v) : null);
+            } else {
+              formData[key] = this.value;
+            }
+          });
+        }
+        var toggles = app.querySelectorAll("[data-toggle]");
+        for (var t = 0; t < toggles.length; t++) {
+          toggles[t].addEventListener("click", function () {
+            if (!formData) return;
+            var key = this.getAttribute("data-toggle");
+            formData[key] = !formData[key];
+            this.setAttribute("aria-checked", formData[key] ? "true" : "false");
+          });
+        }
+
+        var copyBtn = document.getElementById("copy-link");
+        if (copyBtn) copyBtn.addEventListener("click", function () {
+          var link = this.getAttribute("data-link");
+          var done = function () { toast("Link copied — paste it into your NFC writer app"); };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(done, function () { fallbackCopy(link); done(); });
+          } else { fallbackCopy(link); done(); }
+        });
+        function fallbackCopy(text) {
+          var ta = document.createElement("textarea");
+          ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand("copy"); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+
+        var expAll = document.getElementById("export-all");
+        if (expAll) expAll.addEventListener("click", function () { exportCSV(null); });
+        var expHive = document.getElementById("export-hive");
+        if (expHive) expHive.addEventListener("click", function () { exportCSV(route.hiveId); });
+
+        var askH = document.getElementById("ask-delete-hive");
+        if (askH) askH.addEventListener("click", function () { confirmState = "delete-hive"; render(); });
+        var confH = document.getElementById("confirm-delete-hive");
+        if (confH) confH.addEventListener("click", function () {
+          state.hives = state.hives.filter(function (h) { return h.id !== route.hiveId; });
+          state.inspections = state.inspections.filter(function (x) { return x.hiveId !== route.hiveId; });
+          saveState(); confirmState = null;
+          toast("Hive deleted");
+          navigate("#/");
+        });
+        var askI = document.getElementById("ask-delete-inspection");
+        if (askI) askI.addEventListener("click", function () { confirmState = "delete-inspection"; render(); });
+        var confI = document.getElementById("confirm-delete-inspection");
+        if (confI) confI.addEventListener("click", function () {
+          state.inspections = state.inspections.filter(function (x) { return x.id !== route.inspectionId; });
+          saveState(); confirmState = null;
+          toast("Inspection deleted");
+          navigate("#/hive/" + route.hiveId);
+        });
+        var cancel = document.getElementById("cancel-confirm");
+        if (cancel) cancel.addEventListener("click", function () { confirmState = null; render(); });
+
+        var saveHiveBtn = document.getElementById("save-hive");
+        if (saveHiveBtn) saveHiveBtn.addEventListener("click", function () {
+          if (!formData) return;
+          if (route.name === "editHive") {
+            var h = findHive(route.hiveId);
+            if (!h) return;
+            for (var k in formData) h[k] = formData[k];
+            saveState(); toast("Hive saved");
+            navigate("#/hive/" + h.id);
+          } else {
+            var nh = { id: state.nextHiveId++ };
+            for (var k2 in formData) nh[k2] = formData[k2];
+            state.hives.push(nh);
+            saveState(); toast("Hive added");
+            navigate("#/hive/" + nh.id);
+          }
+        });
+
+        var saveInspBtn = document.getElementById("save-inspection");
+        if (saveInspBtn) saveInspBtn.addEventListener("click", function () {
+          if (!formData) return;
+          if (!formData.date) { formError("Give the inspection a date first."); return; }
+          if (route.name === "editInspection") {
+            var ins = findInspection(route.inspectionId);
+            if (!ins) return;
+            ins.payload = formData;
+            saveState(); toast("Inspection saved");
+            navigate("#/hive/" + route.hiveId + "/inspection/" + ins.id);
+          } else {
+            var ni = { id: state.nextInspectionId++, hiveId: route.hiveId, payload: formData };
+            state.inspections.push(ni);
+            saveState(); toast("Inspection saved");
+            navigate("#/hive/" + route.hiveId + "/inspection/" + ni.id);
+          }
+        });
+      }
+
+      window.addEventListener("hashchange", function () {
+        confirmState = null;
+        setupForm(parseRoute(window.location.hash));
+        render();
+      });
+
+      setupForm(parseRoute(window.location.hash));
+      render();
+
+      // ------------------------------------------------------------------
+      // Background bees — a few small bees drifting behind the content on
+      // a fixed canvas. Pure decoration: pointer-events are off, the layer
+      // sits under <main>, and prefers-reduced-motion leaves them still.
+      // ------------------------------------------------------------------
+      (function () {
+        var canvas = document.getElementById("bee-bg");
+        if (!canvas || !canvas.getContext) return;
+        var ctx = canvas.getContext("2d");
+        var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var W = 0, H = 0, DPR = 1;
+        var bees = [];
+
+        function resize() {
+          DPR = Math.min(window.devicePixelRatio || 1, 2);
+          W = window.innerWidth; H = window.innerHeight;
+          canvas.width = Math.round(W * DPR);
+          canvas.height = Math.round(H * DPR);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          if (reduced) drawFrame(0);
+        }
+
+        function makeBee(seed) {
+          var margin = 40;
+          return {
+            x: margin + Math.random() * Math.max(1, W - margin * 2),
+            y: margin + Math.random() * Math.max(1, H - margin * 2),
+            tx: 0, ty: 0,
+            angle: Math.random() * Math.PI * 2,
+            speed: 22 + Math.random() * 16,          // px per second
+            size: 9 + Math.random() * 3.5,           // body length, px
+            phase: seed * 1.7,
+            retarget: 0
+          };
+        }
+        function pickTarget(b) {
+          var margin = 36;
+          b.tx = margin + Math.random() * Math.max(1, W - margin * 2);
+          b.ty = margin + Math.random() * Math.max(1, H - margin * 2);
+          b.retarget = 4 + Math.random() * 5;
+        }
+        function initBees() {
+          bees = [];
+          var count = W < 480 ? 5 : 7;
+          for (var i = 0; i < count; i++) { var b = makeBee(i + 1); pickTarget(b); bees.push(b); }
+        }
+
+        function drawBee(b, t) {
+          var s = b.size;
+          var flap = Math.sin(t * 34 + b.phase * 7) * 0.55;   // wing flutter
+          var bob = Math.sin(t * 2.2 + b.phase) * 1.6;
+          ctx.save();
+          ctx.translate(b.x, b.y + bob);
+          ctx.rotate(b.angle);
+          ctx.globalAlpha = 0.85;
+          // wings (behind body)
+          ctx.fillStyle = "rgba(255,255,255,0.75)";
+          ctx.strokeStyle = "rgba(122,106,88,0.35)";
+          ctx.lineWidth = 0.6;
+          for (var side = -1; side <= 1; side += 2) {
+            ctx.save();
+            ctx.translate(-s * 0.08, -s * 0.18);
+            ctx.rotate(side * (0.65 + flap * 0.45));
+            ctx.beginPath();
+            ctx.ellipse(side * s * 0.16, -s * 0.30, s * 0.30, s * 0.15, side * 0.5, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+            ctx.restore();
+          }
+          // body
+          ctx.beginPath();
+          ctx.ellipse(0, 0, s * 0.52, s * 0.36, 0, 0, Math.PI * 2);
+          ctx.fillStyle = "#e8a812";
+          ctx.fill();
+          ctx.save();
+          ctx.clip();
+          ctx.fillStyle = "rgba(41,32,24,0.85)";
+          ctx.fillRect(-s * 0.18, -s * 0.4, s * 0.15, s * 0.8);
+          ctx.fillRect(s * 0.10, -s * 0.4, s * 0.15, s * 0.8);
+          ctx.restore();
+          ctx.strokeStyle = "rgba(41,32,24,0.25)";
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, s * 0.52, s * 0.36, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          // head + stinger
+          ctx.fillStyle = "#292018";
+          ctx.beginPath();
+          ctx.arc(s * 0.55, 0, s * 0.17, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(-s * 0.52, -s * 0.09);
+          ctx.lineTo(-s * 0.72, 0);
+          ctx.lineTo(-s * 0.52, s * 0.09);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawFrame(t) {
+          ctx.clearRect(0, 0, W, H);
+          for (var i = 0; i < bees.length; i++) drawBee(bees[i], t);
+        }
+
+        var last = 0;
+        function tick(now) {
+          var t = now / 1000;
+          var dt = Math.min(0.05, last ? t - last : 0.016);
+          last = t;
+          for (var i = 0; i < bees.length; i++) {
+            var b = bees[i];
+            b.retarget -= dt;
+            var dx = b.tx - b.x, dy = b.ty - b.y;
+            if (b.retarget <= 0 || dx * dx + dy * dy < 30 * 30) pickTarget(b);
+            var want = Math.atan2(dy, dx) + Math.sin(t * 1.4 + b.phase) * 0.35; // gentle wobble
+            var diff = want - b.angle;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            b.angle += diff * Math.min(1, dt * 1.6);
+            b.x += Math.cos(b.angle) * b.speed * dt;
+            b.y += Math.sin(b.angle) * b.speed * dt;
+          }
+          drawFrame(t);
+          window.requestAnimationFrame(tick);
+        }
+
+        resize();
+        initBees();
+        if (reduced) {
+          drawFrame(0);   // still bees, no motion
+        } else {
+          window.requestAnimationFrame(tick);
+        }
+        window.addEventListener("resize", function () {
+          var oldW = W, oldH = H;
+          resize();
+          if (Math.abs(W - oldW) > 60 || Math.abs(H - oldH) > 60) initBees();
+        });
+      })();
+    </script>
+  </body>
+</html>
